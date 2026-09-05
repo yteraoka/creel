@@ -6,6 +6,9 @@ domain と path の構造を保ったままファイルとして保存します�
 
 ## インストール
 
+[Releases](https://github.com/yteraoka/creel/releases) から
+Linux / macOS / Windows (amd64, arm64) 向けのビルド済みバイナリを取得できます。
+
 ```sh
 go install github.com/yteraoka/creel@latest
 ```
@@ -112,6 +115,7 @@ rules:
 | `-ca-dir` | CA を置くディレクトリ (デフォルト `$HOME/.config/creel`) |
 | `-log-level` | `debug` / `info` / `warn` / `error` |
 | `-print-ca` | CA 証明書のパスを表示して終了 |
+| `-version` | バージョンを表示して終了 |
 
 ## 注意
 
