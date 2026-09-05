@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.3](https://github.com/yteraoka/creel/compare/v0.0.2...v0.0.3) - 2026-09-05
+
+- rule ごとに min_size を指定できるようにする by @yteraoka in https://github.com/yteraoka/creel/pull/16
+
 ## [v0.0.2](https://github.com/yteraoka/creel/compare/v0.0.1...v0.0.2) - 2026-09-05
 
 - 設定ファイルを ./config.yaml → $HOME/.config/creel/config.yaml の順で探す by @yteraoka in https://github.com/yteraoka/creel/pull/13
