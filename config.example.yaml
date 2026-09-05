@@ -9,6 +9,11 @@ output_dir: captured
 # 同じファイルが既にある場合の動作: overwrite (デフォルト) / skip / number
 on_exist: overwrite
 
+# true にすると、URL のパスに適切な拡張子が無い場合に Content-Type から
+# 補います (例: /api/v1/users が application/json なら users.json)。
+# false (デフォルト) では URL のパスをそのままファイル名にします。
+add_extension: false
+
 # 保存のためにメモリへ読み込むレスポンスボディの上限 (バイト)。
 # これを超えたレスポンスはクライアントへ素通しし、保存はしません。
 max_body_size: 67108864

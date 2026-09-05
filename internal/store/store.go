@@ -30,12 +30,15 @@ const maxSegment = 120
 
 // Store saves bodies under a root directory.
 type Store struct {
-	root   string
-	policy ExistPolicy
+	root         string
+	policy       ExistPolicy
+	addExtension bool
 }
 
-// New returns a Store writing under root.
-func New(root string, policy ExistPolicy) (*Store, error) {
+// New returns a Store writing under root. When addExtension is set, a file
+// name that does not already carry an extension for the response's content
+// type gets one appended.
+func New(root string, policy ExistPolicy, addExtension bool) (*Store, error) {
 	switch policy {
 	case "":
 		policy = Overwrite
@@ -47,16 +50,17 @@ func New(root string, policy ExistPolicy) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Store{root: abs, policy: policy}, nil
+	return &Store{root: abs, policy: policy, addExtension: addExtension}, nil
 }
 
 // Root returns the absolute output directory.
 func (s *Store) Root() string { return s.root }
 
-// Save writes body for a request to host/urlPath?query. It returns the file
-// written, or "" when an existing file was kept because of the skip policy.
-func (s *Store) Save(host, urlPath, query string, body []byte) (string, error) {
-	target := s.Path(host, urlPath, query)
+// Save writes body for a request to host/urlPath?query, whose response had
+// the given content type. It returns the file written, or "" when an existing
+// file was kept because of the skip policy.
+func (s *Store) Save(host, urlPath, query, contentType string, body []byte) (string, error) {
+	target := s.Path(host, urlPath, query, contentType)
 
 	dir, err := s.makeDir(filepath.Dir(target))
 	if err != nil {
@@ -91,9 +95,9 @@ func (s *Store) Save(host, urlPath, query string, body []byte) (string, error) {
 	return target, nil
 }
 
-// Path returns the file a response for host/urlPath?query maps to, without
-// touching the filesystem.
-func (s *Store) Path(host, urlPath, query string) string {
+// Path returns the file a response for host/urlPath?query with the given
+// content type maps to, without touching the filesystem.
+func (s *Store) Path(host, urlPath, query, contentType string) string {
 	elems := []string{s.root, sanitize(hostOnly(host))}
 
 	segs := strings.Split(strings.TrimPrefix(urlPath, "/"), "/")
@@ -120,6 +124,9 @@ func (s *Store) Path(host, urlPath, query string) string {
 		// Queries differing only in parameters must not collide, but a raw
 		// query makes a poor file name, so tag the path with a digest.
 		p += "_" + digest(query)
+	}
+	if s.addExtension {
+		p += extensionFor(contentType, p)
 	}
 	return p
 }

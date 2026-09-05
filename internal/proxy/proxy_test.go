@@ -71,7 +71,7 @@ func newHarness(t *testing.T, cfg *config.Config, origin *httptest.Server) *harn
 	if cfg.MaxBodySize == 0 {
 		cfg.MaxBodySize = config.DefaultMaxBodySize
 	}
-	st, err := store.New(out, store.ExistPolicy(cfg.OnExist))
+	st, err := store.New(out, store.ExistPolicy(cfg.OnExist), cfg.AddExtension)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,6 +187,20 @@ func TestHTTPSInterceptSavesMatchingBody(t *testing.T) {
 	}
 	if string(got) != body {
 		t.Errorf("saved %q, want %q", got, body)
+	}
+}
+
+func TestAddExtensionNamesFilesByContentType(t *testing.T) {
+	origin := httptest.NewTLSServer(originHandler())
+	defer origin.Close()
+	h := newHarness(t, &config.Config{AddExtension: true, Rules: jsonRules()}, origin)
+
+	if _, body := h.get(t, origin.URL+"/api/v1/users"); body != `{"users":["ada"]}` {
+		t.Fatalf("body = %q", body)
+	}
+	files := h.waitSaved(t, 1)
+	if !strings.HasSuffix(files[0], "/api/v1/users.json") {
+		t.Errorf("saved %v, want the path with a .json extension", files)
 	}
 }
 

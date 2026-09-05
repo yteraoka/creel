@@ -207,7 +207,8 @@ func (p *Proxy) save(rule *config.Rule, r *http.Request, resp *http.Response, bo
 		decoded = body
 	}
 
-	name, err := p.store.Save(hostWithoutPort(r.URL.Host), r.URL.Path, r.URL.RawQuery, decoded)
+	name, err := p.store.Save(hostWithoutPort(r.URL.Host), r.URL.Path, r.URL.RawQuery,
+		contentTypeOf(resp.Header), decoded)
 	if err != nil {
 		p.log.Error("save failed", "url", r.URL.String(), "err", err)
 		return

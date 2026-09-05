@@ -9,7 +9,7 @@ import (
 
 func newStore(t *testing.T, policy ExistPolicy) *Store {
 	t.Helper()
-	s, err := New(t.TempDir(), policy)
+	s, err := New(t.TempDir(), policy, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestPathMirrorsDomainAndPath(t *testing.T) {
 		{"example.com", "/a:b?c", "", "example.com/a_b_c"},
 	}
 	for _, tt := range tests {
-		got, err := filepath.Rel(s.Root(), s.Path(tt.host, tt.path, tt.query))
+		got, err := filepath.Rel(s.Root(), s.Path(tt.host, tt.path, tt.query, ""))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -43,9 +43,9 @@ func TestPathMirrorsDomainAndPath(t *testing.T) {
 
 func TestPathSeparatesQueries(t *testing.T) {
 	s := newStore(t, Overwrite)
-	a := s.Path("example.com", "/search", "q=1")
-	b := s.Path("example.com", "/search", "q=2")
-	plain := s.Path("example.com", "/search", "")
+	a := s.Path("example.com", "/search", "q=1", "")
+	b := s.Path("example.com", "/search", "q=2", "")
+	plain := s.Path("example.com", "/search", "", "")
 	if a == b || a == plain {
 		t.Errorf("queries collided: %q %q %q", a, b, plain)
 	}
@@ -56,7 +56,7 @@ func TestPathSeparatesQueries(t *testing.T) {
 
 func TestSaveWritesFile(t *testing.T) {
 	s := newStore(t, Overwrite)
-	name, err := s.Save("example.com", "/api/v1/users", "", []byte("hello"))
+	name, err := s.Save("example.com", "/api/v1/users", "", "", []byte("hello"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,8 +72,8 @@ func TestSaveWritesFile(t *testing.T) {
 func TestSavePolicies(t *testing.T) {
 	t.Run("overwrite", func(t *testing.T) {
 		s := newStore(t, Overwrite)
-		first, _ := s.Save("h.test", "/a", "", []byte("one"))
-		second, err := s.Save("h.test", "/a", "", []byte("two"))
+		first, _ := s.Save("h.test", "/a", "", "", []byte("one"))
+		second, err := s.Save("h.test", "/a", "", "", []byte("two"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -87,8 +87,8 @@ func TestSavePolicies(t *testing.T) {
 
 	t.Run("skip", func(t *testing.T) {
 		s := newStore(t, Skip)
-		first, _ := s.Save("h.test", "/a", "", []byte("one"))
-		second, err := s.Save("h.test", "/a", "", []byte("two"))
+		first, _ := s.Save("h.test", "/a", "", "", []byte("one"))
+		second, err := s.Save("h.test", "/a", "", "", []byte("two"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -102,8 +102,8 @@ func TestSavePolicies(t *testing.T) {
 
 	t.Run("number", func(t *testing.T) {
 		s := newStore(t, Number)
-		first, _ := s.Save("h.test", "/a", "", []byte("one"))
-		second, err := s.Save("h.test", "/a", "", []byte("two"))
+		first, _ := s.Save("h.test", "/a", "", "", []byte("one"))
+		second, err := s.Save("h.test", "/a", "", "", []byte("two"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -117,11 +117,11 @@ func TestSaveHandlesFileDirectoryCollisions(t *testing.T) {
 	s := newStore(t, Overwrite)
 
 	// /a arrives first as a file, then /a/b needs /a to be a directory.
-	file, err := s.Save("h.test", "/a", "", []byte("file"))
+	file, err := s.Save("h.test", "/a", "", "", []byte("file"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	nested, err := s.Save("h.test", "/a/b", "", []byte("nested"))
+	nested, err := s.Save("h.test", "/a/b", "", "", []byte("nested"))
 	if err != nil {
 		t.Fatalf("nested save: %v", err)
 	}
@@ -133,10 +133,10 @@ func TestSaveHandlesFileDirectoryCollisions(t *testing.T) {
 	}
 
 	// The reverse order: /c/d exists, then /c itself is fetched.
-	if _, err := s.Save("h.test", "/c/d", "", []byte("nested")); err != nil {
+	if _, err := s.Save("h.test", "/c/d", "", "", []byte("nested")); err != nil {
 		t.Fatal(err)
 	}
-	parent, err := s.Save("h.test", "/c", "", []byte("parent"))
+	parent, err := s.Save("h.test", "/c", "", "", []byte("parent"))
 	if err != nil {
 		t.Fatalf("parent save: %v", err)
 	}
@@ -157,7 +157,7 @@ func TestSanitizeLongSegment(t *testing.T) {
 }
 
 func TestNewRejectsUnknownPolicy(t *testing.T) {
-	if _, err := New(t.TempDir(), "clobber"); err == nil {
+	if _, err := New(t.TempDir(), "clobber", false); err == nil {
 		t.Fatal("want error, got nil")
 	}
 }

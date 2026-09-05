@@ -92,7 +92,7 @@ func run() error {
 		log.Warn("no rules configured; nothing will be saved", "config", *configPath)
 	}
 
-	st, err := store.New(cfg.OutputDir, store.ExistPolicy(cfg.OnExist))
+	st, err := store.New(cfg.OutputDir, store.ExistPolicy(cfg.OnExist), cfg.AddExtension)
 	if err != nil {
 		return err
 	}
