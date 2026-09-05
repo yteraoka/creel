@@ -1,0 +1,6 @@
+[tagpr]
+	# The version lives only in the tag; GoReleaser injects it at build time.
+	versionFile = -
+	# The tag triggers the release workflow, where GoReleaser creates the
+	# GitHub Release with the built binaries attached.
+	release = false
