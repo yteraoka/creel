@@ -22,6 +22,9 @@ import (
 	"github.com/yteraoka/creel/internal/store"
 )
 
+// version is the build's version, set by GoReleaser at release time.
+var version = "dev"
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, "creel: "+err.Error())
@@ -37,8 +40,14 @@ func run() error {
 		caDir      = flag.String("ca-dir", "", "directory holding the CA (default $HOME/.config/creel)")
 		logLevel   = flag.String("log-level", "info", "debug, info, warn or error")
 		printCA    = flag.Bool("print-ca", false, "print the CA certificate path and exit")
+		showVer    = flag.Bool("version", false, "print the version and exit")
 	)
 	flag.Parse()
+
+	if *showVer {
+		fmt.Println("creel " + version)
+		return nil
+	}
 
 	level, err := parseLevel(*logLevel)
 	if err != nil {
