@@ -1,0 +1,24 @@
+version: "2"
+
+linters:
+  enable:
+    - bodyclose
+    - errorlint
+    - misspell
+    - revive
+    - unconvert
+  exclusions:
+    presets:
+      # Deferred Close and writes to a response are reported by errcheck even
+      # where there is nothing useful to do with the error.
+      - std-error-handling
+    rules:
+      # Test helpers close the bodies they return, which bodyclose cannot see.
+      - path: _test\.go
+        linters:
+          - bodyclose
+          - errcheck
+
+formatters:
+  enable:
+    - gofmt
