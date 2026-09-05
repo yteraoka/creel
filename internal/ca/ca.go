@@ -20,11 +20,13 @@ import (
 	"time"
 )
 
+// CertFile and KeyFile are the file names used inside the CA directory.
 const (
-	// CertFile and KeyFile are the file names used inside the CA directory.
 	CertFile = "ca.pem"
 	KeyFile  = "ca-key.pem"
+)
 
+const (
 	caValidity   = 10 * 365 * 24 * time.Hour
 	leafValidity = 397 * 24 * time.Hour
 )

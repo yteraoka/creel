@@ -24,22 +24,22 @@ import (
 // origin serves the fixtures the proxy tests fetch through creel.
 func originHandler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/v1/users", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v1/users", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		io.WriteString(w, `{"users":["ada"]}`)
 	})
-	mux.HandleFunc("/api/v1/gzipped", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v1/gzipped", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Content-Encoding", "gzip")
 		gz := gzip.NewWriter(w)
 		defer gz.Close()
 		io.WriteString(gz, `{"compressed":true}`)
 	})
-	mux.HandleFunc("/page.html", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/page.html", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		io.WriteString(w, "<h1>not json</h1>")
 	})
-	mux.HandleFunc("/api/v1/huge", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v1/huge", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(bytes.Repeat([]byte("x"), 4096))
 	})

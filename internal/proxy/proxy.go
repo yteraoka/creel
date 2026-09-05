@@ -134,7 +134,7 @@ func (p *Proxy) tunnel(clientConn net.Conn, host string) {
 	upstream, err := p.dialer.Dial("tcp", withPort(host, "443"))
 	if err != nil {
 		p.log.Warn("tunnel dial failed", "host", host, "err", err)
-		fmt.Fprintf(clientConn, "HTTP/1.1 502 Bad Gateway\r\n\r\n")
+		_, _ = fmt.Fprintf(clientConn, "HTTP/1.1 502 Bad Gateway\r\n\r\n")
 		return
 	}
 	defer upstream.Close()
@@ -313,7 +313,7 @@ func hijack(w http.ResponseWriter) (net.Conn, error) {
 		// not be lost; put it back in front of the connection.
 		pending := make([]byte, buf.Reader.Buffered())
 		if _, err := io.ReadFull(buf.Reader, pending); err != nil {
-			conn.Close()
+			_ = conn.Close()
 			return nil, err
 		}
 		return &prefixConn{Conn: conn, pending: pending}, nil
