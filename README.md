@@ -21,17 +21,18 @@ go build -o creel .
 
 ## 使い方
 
-1. 設定ファイルを用意します。
+1. 設定ファイルを用意します。カレントディレクトリの `config.yaml`、
+   もしくは `$HOME/.config/creel/config.yaml` に置きます。
 
    ```sh
-   cp config.example.yaml creel.yaml
+   cp config.example.yaml config.yaml
    ```
 
 2. 起動します。初回起動時に CA 証明書が無ければ `$HOME/.config/creel/`
    (`XDG_CONFIG_HOME` が設定されていればその下の `creel/`) に作成されます。
 
    ```sh
-   ./creel -config creel.yaml
+   ./creel
    ```
 
 3. CA 証明書をクライアントに信頼させます。パスは `creel -print-ca` で確認できます。
@@ -56,6 +57,14 @@ go build -o creel .
    ```
 
 ## 設定
+
+`-config` を指定しなかった場合、次の順に設定ファイルを探します。
+
+1. カレントディレクトリの `config.yaml`
+2. `$HOME/.config/creel/config.yaml`
+   (`XDG_CONFIG_HOME` が設定されていればその下の `creel/config.yaml`)
+
+どちらも無ければエラーになります。
 
 ```yaml
 listen: 127.0.0.1:8080      # 待ち受けアドレス
@@ -121,7 +130,7 @@ rules:
 
 | オプション | 説明 |
 | --- | --- |
-| `-config` | 設定ファイルのパス (デフォルト `creel.yaml`) |
+| `-config` | 設定ファイルのパス (省略時は下記の順で探します) |
 | `-listen` | 待ち受けアドレス (設定ファイルより優先) |
 | `-output` | 保存先ディレクトリ (設定ファイルより優先) |
 | `-ca-dir` | CA を置くディレクトリ (デフォルト `$HOME/.config/creel`) |

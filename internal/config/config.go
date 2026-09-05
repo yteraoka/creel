@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -52,6 +53,38 @@ type Rule struct {
 	// ContentType is a glob pattern matched against the response Content-Type
 	// with its parameters stripped, e.g. "application/json" or "image/*".
 	ContentType string `yaml:"content_type"`
+}
+
+// FileName is the name creel looks for when no config file is given.
+const FileName = "config.yaml"
+
+// Dir is $HOME/.config/creel, honouring XDG_CONFIG_HOME when set. It holds
+// the configuration file and the CA.
+func Dir() (string, error) {
+	if d := os.Getenv("XDG_CONFIG_HOME"); d != "" {
+		return filepath.Join(d, "creel"), nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".config", "creel"), nil
+}
+
+// DefaultPath returns the configuration file to read when none was given:
+// config.yaml in the working directory if it exists, otherwise the one in
+// Dir(). The second return value reports whether that file exists.
+func DefaultPath() (string, bool, error) {
+	if _, err := os.Stat(FileName); err == nil {
+		return FileName, true, nil
+	}
+	dir, err := Dir()
+	if err != nil {
+		return "", false, err
+	}
+	p := filepath.Join(dir, FileName)
+	_, err = os.Stat(p)
+	return p, err == nil, nil
 }
 
 // Load reads and validates the configuration file at p.

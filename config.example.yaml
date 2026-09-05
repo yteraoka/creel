@@ -1,4 +1,5 @@
-# creel の設定例。creel.yaml としてコピーして使ってください。
+# creel の設定例。カレントディレクトリの config.yaml、または
+# $HOME/.config/creel/config.yaml としてコピーして使ってください。
 
 # プロキシの待ち受けアドレス (デフォルト 127.0.0.1:8080)
 listen: 127.0.0.1:8080

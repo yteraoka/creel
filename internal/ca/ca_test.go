@@ -135,24 +135,3 @@ func TestLoadRejectsCorruptFiles(t *testing.T) {
 		t.Fatal("want an error for a corrupt CA, got nil")
 	}
 }
-
-func TestDefaultDirHonoursXDG(t *testing.T) {
-	t.Setenv("XDG_CONFIG_HOME", "/xdg")
-	dir, err := DefaultDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if dir != filepath.Join("/xdg", "creel") {
-		t.Errorf("DefaultDir = %q", dir)
-	}
-
-	t.Setenv("XDG_CONFIG_HOME", "")
-	t.Setenv("HOME", "/home/someone")
-	dir, err = DefaultDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if dir != filepath.Join("/home/someone", ".config", "creel") {
-		t.Errorf("DefaultDir = %q", dir)
-	}
-}

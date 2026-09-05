@@ -34,13 +34,14 @@ func main() {
 
 func run() error {
 	var (
-		configPath = flag.String("config", "creel.yaml", "path to the YAML configuration file")
-		listen     = flag.String("listen", "", "address to listen on (overrides listen in the config)")
-		outputDir  = flag.String("output", "", "directory to save bodies under (overrides output_dir)")
-		caDir      = flag.String("ca-dir", "", "directory holding the CA (default $HOME/.config/creel)")
-		logLevel   = flag.String("log-level", "info", "debug, info, warn or error")
-		printCA    = flag.Bool("print-ca", false, "print the CA certificate path and exit")
-		showVer    = flag.Bool("version", false, "print the version and exit")
+		configPath = flag.String("config", "",
+			"path to the YAML configuration file (default ./config.yaml, else $HOME/.config/creel/config.yaml)")
+		listen    = flag.String("listen", "", "address to listen on (overrides listen in the config)")
+		outputDir = flag.String("output", "", "directory to save bodies under (overrides output_dir)")
+		caDir     = flag.String("ca-dir", "", "directory holding the CA (default $HOME/.config/creel)")
+		logLevel  = flag.String("log-level", "info", "debug, info, warn or error")
+		printCA   = flag.Bool("print-ca", false, "print the CA certificate path and exit")
+		showVer   = flag.Bool("version", false, "print the version and exit")
 	)
 	flag.Parse()
 
@@ -57,7 +58,7 @@ func run() error {
 
 	dir := *caDir
 	if dir == "" {
-		if dir, err = ca.DefaultDir(); err != nil {
+		if dir, err = config.Dir(); err != nil {
 			return fmt.Errorf("locate CA directory: %w", err)
 		}
 	}
@@ -75,10 +76,14 @@ func run() error {
 		fmt.Fprintf(os.Stderr, "Trust %s in your client to let creel intercept TLS.\n", certPath)
 	}
 
-	cfg, err := config.Load(*configPath)
+	path, err := configFile(*configPath)
+	if err != nil {
+		return err
+	}
+	cfg, err := config.Load(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return fmt.Errorf("%s not found; pass -config or create one (see config.example.yaml)", *configPath)
+			return fmt.Errorf("%s not found; pass -config or create one (see config.example.yaml)", path)
 		}
 		return err
 	}
@@ -89,7 +94,7 @@ func run() error {
 		cfg.OutputDir = *outputDir
 	}
 	if len(cfg.Rules) == 0 {
-		log.Warn("no rules configured; nothing will be saved", "config", *configPath)
+		log.Warn("no rules configured; nothing will be saved", "config", path)
 	}
 
 	st, err := store.New(cfg.OutputDir, store.ExistPolicy(cfg.OnExist), cfg.AddExtension)
@@ -109,7 +114,8 @@ func run() error {
 
 	errCh := make(chan error, 1)
 	go func() {
-		log.Info("listening", "addr", cfg.Listen, "output_dir", st.Root(), "rules", len(cfg.Rules), "ca", certPath)
+		log.Info("listening", "addr", cfg.Listen, "config", path,
+			"output_dir", st.Root(), "rules", len(cfg.Rules), "ca", certPath)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 		}
@@ -124,6 +130,23 @@ func run() error {
 		defer cancel()
 		return srv.Shutdown(shutdownCtx)
 	}
+}
+
+// configFile returns the file named by the -config flag, or the default one:
+// config.yaml in the working directory, else the one under $HOME/.config/creel.
+func configFile(flagValue string) (string, error) {
+	if flagValue != "" {
+		return flagValue, nil
+	}
+	p, found, err := config.DefaultPath()
+	if err != nil {
+		return "", fmt.Errorf("locate config file: %w", err)
+	}
+	if !found {
+		return "", fmt.Errorf("no config file: create %s or %s, or pass -config (see config.example.yaml)",
+			config.FileName, p)
+	}
+	return p, nil
 }
 
 func parseLevel(s string) (slog.Level, error) {
