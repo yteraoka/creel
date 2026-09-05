@@ -166,7 +166,10 @@ func (p *Proxy) forward(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rule := p.cfg.Match(hostWithoutPort(r.URL.Host), r.URL.Path, contentTypeOf(resp.Header))
+	// The body has not arrived yet, so any size condition is settled later,
+	// in save.
+	rule := p.cfg.Match(hostWithoutPort(r.URL.Host), r.URL.Path,
+		contentTypeOf(resp.Header), config.SizeUnknown)
 
 	respHeader := w.Header()
 	for k, vs := range resp.Header {
@@ -195,16 +198,27 @@ func (p *Proxy) forward(w http.ResponseWriter, r *http.Request) {
 			"url", r.URL.String(), "max_body_size", p.cfg.MaxBodySize)
 		return
 	}
-	p.save(rule, r, resp, capture.buf)
+	p.save(r, resp, capture.buf)
 }
 
-// save decodes and writes a captured body.
-func (p *Proxy) save(rule *config.Rule, r *http.Request, resp *http.Response, body []byte) {
+// save decodes a captured body and writes it, unless the size the rules ask
+// for rules it out.
+func (p *Proxy) save(r *http.Request, resp *http.Response, body []byte) {
 	decoded, err := decodeBody(resp.Header.Get("Content-Encoding"), body)
 	if err != nil {
 		p.log.Warn("cannot decode body, saving as received",
 			"url", r.URL.String(), "encoding", resp.Header.Get("Content-Encoding"), "err", err)
 		decoded = body
+	}
+
+	// Now that the size is known, a min_size can rule this rule out and let
+	// another one take the response.
+	rule := p.cfg.Match(hostWithoutPort(r.URL.Host), r.URL.Path,
+		contentTypeOf(resp.Header), int64(len(decoded)))
+	if rule == nil {
+		p.log.Debug("body smaller than min_size, not saving",
+			"url", r.URL.String(), "bytes", len(decoded))
+		return
 	}
 
 	name, err := p.store.Save(hostWithoutPort(r.URL.Host), r.URL.Path, r.URL.RawQuery,

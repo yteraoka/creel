@@ -79,6 +79,7 @@ rules:
     domain: "**.example.com"
     path: /api/**
     content_type: application/json
+    min_size: 0
 ```
 
 `rules` は上から順に評価され、最初にマッチしたルールで保存されます。
@@ -89,6 +90,19 @@ rules:
 | `domain` | ポートを除いたリクエストホスト (大文字小文字を区別しない) | `*` は 1 ラベル、`**` は 0 個以上のラベル。`*.example.com` は `api.example.com` にマッチし `a.b.example.com` にはマッチしない。`**.example.com` は `example.com` とすべてのサブドメインにマッチ |
 | `path` | リクエストパス (大文字小文字を区別する) | `*` は `/` を跨がない、`**` は跨ぐ |
 | `content_type` | `charset` などのパラメータを除いたレスポンスの Content-Type | `image/*` のような glob |
+| `min_size` | 保存するボディのバイト数 (省略時は 0 = 制限なし) | — |
+
+`min_size` を指定したルールは、保存するファイルがそのサイズ未満の場合はマッチせず、
+次のルールの評価に進みます。比較対象は実際にファイルへ書き出すバイト数なので、
+gzip などで圧縮されている場合は展開後のサイズです。
+
+```yaml
+rules:
+  # 1KB 以上の画像だけ保存する
+  - domain: example.com
+    content_type: image/*
+    min_size: 1024
+```
 
 ### TLS の復号範囲
 

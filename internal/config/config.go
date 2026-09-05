@@ -53,6 +53,9 @@ type Rule struct {
 	// ContentType is a glob pattern matched against the response Content-Type
 	// with its parameters stripped, e.g. "application/json" or "image/*".
 	ContentType string `yaml:"content_type"`
+	// MinSize skips responses whose saved body would be smaller than this
+	// many bytes. Zero saves whatever size arrives.
+	MinSize int64 `yaml:"min_size"`
 }
 
 // FileName is the name creel looks for when no config file is given.
@@ -113,6 +116,11 @@ const (
 )
 
 func (c *Config) validate() error {
+	for i, r := range c.Rules {
+		if r.MinSize < 0 {
+			return fmt.Errorf("rules[%d].min_size: must not be negative", i)
+		}
+	}
 	if c.Listen == "" {
 		c.Listen = DefaultListen
 	}
@@ -155,20 +163,33 @@ func (c *Config) MatchesDomain(host string) bool {
 	return false
 }
 
-// Match returns the first rule matching the request host, request path and
-// response content type, or nil when the response should not be saved.
-func (c *Config) Match(host, reqPath, contentType string) *Rule {
+// SizeUnknown asks Match to ignore size conditions, for the point in a
+// response where the body has not been read yet.
+const SizeUnknown = -1
+
+// Match returns the first rule matching the request host, request path,
+// response content type and body size, or nil when the response should not be
+// saved. Pass SizeUnknown as size before the body has arrived.
+func (c *Config) Match(host, reqPath, contentType string, size int64) *Rule {
 	host = strings.ToLower(host)
 	contentType = strings.ToLower(contentType)
 	for i := range c.Rules {
 		r := &c.Rules[i]
 		if matchDomain(r.Domain, host) &&
 			matchPath(r.Path, reqPath) &&
-			matchGlob(r.ContentType, contentType) {
+			matchGlob(r.ContentType, contentType) &&
+			matchSize(r.MinSize, size) {
 			return r
 		}
 	}
 	return nil
+}
+
+// matchSize reports whether a body of the given size passes the rule's
+// minimum. An unknown size passes, so a rule stays a candidate until its body
+// has been read.
+func matchSize(minSize, size int64) bool {
+	return size == SizeUnknown || size >= minSize
 }
 
 // matchDomain matches a host against a domain pattern where "*" covers a

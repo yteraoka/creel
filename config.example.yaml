@@ -24,18 +24,23 @@ max_body_size: 67108864
 mitm_all: false
 
 # 上から順に評価し、最初にマッチしたルールで保存します。
-# domain / path / content_type はどれも省略可能で、省略すると何にでもマッチします。
+# domain / path / content_type / min_size はどれも省略可能で、
+# 省略すると何にでもマッチします。
 rules:
   # domain: "*" は 1 ラベル、"**" は 0 個以上のラベルにマッチします。
   #   *.example.com  -> api.example.com にマッチ、a.b.example.com にはマッチしない
   #   **.example.com -> example.com と全サブドメインにマッチ
   # path: "*" は "/" を跨がず、"**" は跨ぎます。
   # content_type: パラメータ (charset など) を除いた値と比較します。
+  # min_size: 保存するファイルがこのバイト数未満ならマッチせず、次のルールへ進みます。
+  #           圧縮されている場合は展開後のサイズで比較します。
   - name: example の API レスポンス
     domain: "**.example.com"
     path: /api/**
     content_type: application/json
 
+  # 1KB 以上の画像だけ保存する
   - name: 画像
     domain: example.com
     content_type: image/*
+    min_size: 1024

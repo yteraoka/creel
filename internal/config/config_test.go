@@ -152,13 +152,58 @@ func TestMatch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ""
-			if r := c.Match(tt.host, tt.path, tt.contentType); r != nil {
+			if r := c.Match(tt.host, tt.path, tt.contentType, SizeUnknown); r != nil {
 				got = r.Name
 			}
 			if got != tt.want {
 				t.Errorf("Match(%q, %q, %q) = %q, want %q", tt.host, tt.path, tt.contentType, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestMatchMinSize(t *testing.T) {
+	c := &Config{Rules: []Rule{
+		{Name: "big images", Domain: "example.com", ContentType: "image/*", MinSize: 1024},
+		{Name: "anything else", Domain: "example.com"},
+	}}
+
+	tests := []struct {
+		name string
+		size int64
+		want string
+	}{
+		{"below the minimum falls through to the next rule", 1023, "anything else"},
+		{"exactly the minimum matches", 1024, "big images"},
+		{"above the minimum matches", 4096, "big images"},
+		{"an unknown size keeps the rule a candidate", SizeUnknown, "big images"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ""
+			if r := c.Match("example.com", "/logo.png", "image/png", tt.size); r != nil {
+				got = r.Name
+			}
+			if got != tt.want {
+				t.Errorf("Match(size=%d) = %q, want %q", tt.size, got, tt.want)
+			}
+		})
+	}
+
+	// With no other rule to fall through to, a small body matches nothing.
+	only := &Config{Rules: []Rule{{Domain: "example.com", MinSize: 1024}}}
+	if r := only.Match("example.com", "/logo.png", "image/png", 10); r != nil {
+		t.Errorf("Match = %q, want no rule", r.Name)
+	}
+}
+
+func TestLoadRejectsNegativeMinSize(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "creel.yaml")
+	if err := os.WriteFile(p, []byte("rules:\n  - domain: a.test\n    min_size: -1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(p); err == nil {
+		t.Fatal("want an error for a negative min_size, got nil")
 	}
 }
 
