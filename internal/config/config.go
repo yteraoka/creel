@@ -23,6 +23,10 @@ type Config struct {
 	// OnExist is what to do when the target file already exists:
 	// "overwrite" (default), "skip" or "number".
 	OnExist string `yaml:"on_exist"`
+	// AddExtension appends an extension derived from the response's
+	// Content-Type when the URL path does not already carry a fitting one,
+	// so /api/v1/users returning JSON is saved as users.json.
+	AddExtension bool `yaml:"add_extension"`
 	// MaxBodySize caps how many bytes of a response body are buffered for
 	// saving. Larger bodies are passed through to the client unsaved.
 	// Zero selects DefaultMaxBodySize.

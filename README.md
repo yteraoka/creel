@@ -61,6 +61,7 @@ go build -o creel .
 listen: 127.0.0.1:8080      # 待ち受けアドレス
 output_dir: captured        # 保存先ディレクトリ
 on_exist: overwrite         # 既存ファイルがある場合: overwrite / skip / number
+add_extension: false        # Content-Type から拡張子を補うか
 max_body_size: 67108864     # 保存のためにバッファするボディの上限 (バイト)
 mitm_all: false             # true なら全ホストの TLS を復号する
 
@@ -99,6 +100,17 @@ rules:
 | `https://example.com/search?q=go` | `captured/example.com/search_61f03144` |
 
 - クエリ文字列があるものは、内容が衝突しないようにパス末尾へクエリのダイジェストを付けます。
+- `add_extension: true` にすると、ファイル名に適切な拡張子が無い場合に
+  Content-Type から補います。既に合う拡張子があるものはそのままです。
+
+  | リクエスト | Content-Type | `add_extension: true` での保存先 |
+  | --- | --- | --- |
+  | `https://example.com/api/v1/users` | `application/json` | `captured/example.com/api/v1/users.json` |
+  | `https://example.com/` | `text/html` | `captured/example.com/index.html` |
+  | `https://example.com/logo.png` | `image/png` | `captured/example.com/logo.png` (変化なし) |
+  | `https://example.com/index.php` | `text/html` | `captured/example.com/index.php.html` |
+  | `https://example.com/search?q=go` | `application/json` | `captured/example.com/search_61f03144.json` |
+
 - `Content-Encoding: gzip` / `deflate` のレスポンスは復号して保存します
   (クライアントへは元のまま転送します)。`br` や `zstd` は受信したまま保存します。
 - `/a` と `/a/b` のようにファイルとディレクトリが衝突する場合は、

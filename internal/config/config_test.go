@@ -20,6 +20,20 @@ func TestLoadDefaults(t *testing.T) {
 	}
 }
 
+func TestLoadReadsAddExtension(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "creel.yaml")
+	if err := os.WriteFile(p, []byte("add_extension: true\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	c, err := Load(p)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if !c.AddExtension {
+		t.Error("add_extension = false, want true")
+	}
+}
+
 func TestLoadRejectsUnknownFields(t *testing.T) {
 	p := filepath.Join(t.TempDir(), "creel.yaml")
 	if err := os.WriteFile(p, []byte("listne: :8080\n"), 0o600); err != nil {
