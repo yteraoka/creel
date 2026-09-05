@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.0.2](https://github.com/yteraoka/creel/compare/v0.0.1...v0.0.2) - 2026-09-05
+
+- 設定ファイルを ./config.yaml → $HOME/.config/creel/config.yaml の順で探す by @yteraoka in https://github.com/yteraoka/creel/pull/13
+- YAML パッケージを go.yaml.in/yaml/v4 に変更 by @yteraoka in https://github.com/yteraoka/creel/pull/15
+
 ## [v0.0.1](https://github.com/yteraoka/creel/commits/v0.0.1) - 2026-09-05
 
 - spec.md の MITM forward proxy を実装 by @yteraoka in https://github.com/yteraoka/creel/pull/1
