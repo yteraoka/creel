@@ -4,3 +4,5 @@
 	# The tag triggers the release workflow, where GoReleaser creates the
 	# GitHub Release with the built binaries attached.
 	release = false
+	vPrefix = true
+	releaseBranch = main
