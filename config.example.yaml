@@ -1,0 +1,35 @@
+# creel の設定例。creel.yaml としてコピーして使ってください。
+
+# プロキシの待ち受けアドレス (デフォルト 127.0.0.1:8080)
+listen: 127.0.0.1:8080
+
+# 保存先ディレクトリ。この下に domain/path の形でファイルが作られます。
+output_dir: captured
+
+# 同じファイルが既にある場合の動作: overwrite (デフォルト) / skip / number
+on_exist: overwrite
+
+# 保存のためにメモリへ読み込むレスポンスボディの上限 (バイト)。
+# これを超えたレスポンスはクライアントへ素通しし、保存はしません。
+max_body_size: 67108864
+
+# true にすると全ホストの TLS を復号します。false (デフォルト) の場合は
+# rules の domain にマッチするホストだけを復号し、それ以外は素通しします。
+mitm_all: false
+
+# 上から順に評価し、最初にマッチしたルールで保存します。
+# domain / path / content_type はどれも省略可能で、省略すると何にでもマッチします。
+rules:
+  # domain: "*" は 1 ラベル、"**" は 0 個以上のラベルにマッチします。
+  #   *.example.com  -> api.example.com にマッチ、a.b.example.com にはマッチしない
+  #   **.example.com -> example.com と全サブドメインにマッチ
+  # path: "*" は "/" を跨がず、"**" は跨ぎます。
+  # content_type: パラメータ (charset など) を除いた値と比較します。
+  - name: example の API レスポンス
+    domain: "**.example.com"
+    path: /api/**
+    content_type: application/json
+
+  - name: 画像
+    domain: example.com
+    content_type: image/*
