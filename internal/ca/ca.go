@@ -40,18 +40,6 @@ type CA struct {
 	cache map[string]*tls.Certificate
 }
 
-// DefaultDir is $HOME/.config/creel, honouring XDG_CONFIG_HOME when set.
-func DefaultDir() (string, error) {
-	if d := os.Getenv("XDG_CONFIG_HOME"); d != "" {
-		return filepath.Join(d, "creel"), nil
-	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(home, ".config", "creel"), nil
-}
-
 // LoadOrCreate loads the CA from dir, generating a new one if either the
 // certificate or the key is missing.
 func LoadOrCreate(dir string) (*CA, bool, error) {

@@ -40,6 +40,77 @@ func TestLoadRejectsBadOnExist(t *testing.T) {
 	}
 }
 
+func TestDirHonoursXDG(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", "/xdg")
+	dir, err := Dir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if dir != filepath.Join("/xdg", "creel") {
+		t.Errorf("Dir = %q", dir)
+	}
+
+	t.Setenv("XDG_CONFIG_HOME", "")
+	t.Setenv("HOME", "/home/someone")
+	dir, err = Dir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if dir != filepath.Join("/home/someone", ".config", "creel") {
+		t.Errorf("Dir = %q", dir)
+	}
+}
+
+func TestDefaultPath(t *testing.T) {
+	// A config.yaml in the working directory wins.
+	work := t.TempDir()
+	t.Chdir(work)
+	home := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", home)
+	userConfig := filepath.Join(home, "creel", FileName)
+	if err := os.MkdirAll(filepath.Dir(userConfig), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(userConfig, []byte("listen: :1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(work, FileName), []byte("listen: :2\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	p, found, err := DefaultPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !found || p != FileName {
+		t.Fatalf("DefaultPath = %q, %v; want %q, true", p, found, FileName)
+	}
+
+	// Without one there, the user directory is used.
+	if err := os.Remove(filepath.Join(work, FileName)); err != nil {
+		t.Fatal(err)
+	}
+	p, found, err = DefaultPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !found || p != userConfig {
+		t.Fatalf("DefaultPath = %q, %v; want %q, true", p, found, userConfig)
+	}
+
+	// With neither, the user path is reported as missing.
+	if err := os.Remove(userConfig); err != nil {
+		t.Fatal(err)
+	}
+	p, found, err = DefaultPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if found || p != userConfig {
+		t.Fatalf("DefaultPath = %q, %v; want %q, false", p, found, userConfig)
+	}
+}
+
 func TestMatch(t *testing.T) {
 	c := &Config{Rules: []Rule{
 		{Name: "api", Domain: "*.example.com", Path: "/api/**", ContentType: "application/json"},

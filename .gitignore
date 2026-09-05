@@ -34,5 +34,5 @@ go.work.sum
 # creel
 /creel
 /captured/
-/creel.yaml
+/config.yaml
 dist/
