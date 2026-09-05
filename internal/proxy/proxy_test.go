@@ -43,6 +43,10 @@ func originHandler() http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(bytes.Repeat([]byte("x"), 4096))
 	})
+	mux.HandleFunc("/api/v1/tiny", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		io.WriteString(w, `{"n":1}`)
+	})
 	mux.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		body, _ := io.ReadAll(r.Body)
@@ -202,6 +206,49 @@ func TestAddExtensionNamesFilesByContentType(t *testing.T) {
 	if !strings.HasSuffix(files[0], "/api/v1/users.json") {
 		t.Errorf("saved %v, want the path with a .json extension", files)
 	}
+}
+
+func TestMinSizeSkipsSmallBodies(t *testing.T) {
+	origin := httptest.NewTLSServer(originHandler())
+	defer origin.Close()
+	h := newHarness(t, &config.Config{Rules: []config.Rule{
+		{Name: "json", Domain: "127.0.0.1", Path: "/api/**", ContentType: "application/json", MinSize: 16},
+	}}, origin)
+
+	if _, body := h.get(t, origin.URL+"/api/v1/tiny"); body != `{"n":1}` {
+		t.Fatalf("body = %q", body)
+	}
+	h.waitSaved(t, 0)
+
+	// The larger response under the same rule is still saved.
+	if _, body := h.get(t, origin.URL+"/api/v1/users"); body != `{"users":["ada"]}` {
+		t.Fatalf("body = %q", body)
+	}
+	files := h.waitSaved(t, 1)
+	if !strings.HasSuffix(files[0], "/api/v1/users") {
+		t.Errorf("saved %v, want the larger body only", files)
+	}
+}
+
+func TestMinSizeComparesTheDecodedBody(t *testing.T) {
+	origin := httptest.NewTLSServer(originHandler())
+	defer origin.Close()
+	// The gzipped response is 19 bytes decoded; ask for more than that.
+	h := newHarness(t, &config.Config{Rules: []config.Rule{
+		{Name: "json", Domain: "127.0.0.1", Path: "/api/**", ContentType: "application/json", MinSize: 20},
+	}}, origin)
+
+	req, err := http.NewRequest(http.MethodGet, origin.URL+"/api/v1/gzipped", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Accept-Encoding", "gzip")
+	resp, err := h.client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	h.waitSaved(t, 0)
 }
 
 func TestNonMatchingResponsesAreNotSaved(t *testing.T) {
