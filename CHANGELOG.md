@@ -1,5 +1,12 @@
 # Changelog
 
+## [v0.1.1](https://github.com/yteraoka/creel/compare/v0.1.0...v0.1.1) - 2026-10-06
+
+- Update Songmu/tagpr action to v1.20.4 by @renovate[bot] in https://github.com/yteraoka/creel/pull/18
+- Update Songmu/tagpr action to v1.21.0 by @renovate[bot] in https://github.com/yteraoka/creel/pull/20
+- Update dependency golangci/golangci-lint to v2.14.0 by @renovate[bot] in https://github.com/yteraoka/creel/pull/21
+- Update Songmu/tagpr action to v1.21.1 by @renovate[bot] in https://github.com/yteraoka/creel/pull/22
+
 ## [v0.0.3](https://github.com/yteraoka/creel/compare/v0.0.2...v0.0.3) - 2026-09-05
 
 - rule ごとに min_size を指定できるようにする by @yteraoka in https://github.com/yteraoka/creel/pull/16
