@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.1.1](https://github.com/yteraoka/creel/compare/v0.1.0...v0.1.1) - 2026-11-11
+
+- Update Songmu/tagpr action to v1.20.4 by @renovate[bot] in https://github.com/yteraoka/creel/pull/18
+- Update Songmu/tagpr action to v1.21.0 by @renovate[bot] in https://github.com/yteraoka/creel/pull/20
+- Update dependency golangci/golangci-lint to v2.14.0 by @renovate[bot] in https://github.com/yteraoka/creel/pull/21
+- Update Songmu/tagpr action to v1.21.1 by @renovate[bot] in https://github.com/yteraoka/creel/pull/22
+- Update Songmu/tagpr action to v1.21.2 by @renovate[bot] in https://github.com/yteraoka/creel/pull/23
+- Update actions/create-github-app-token action to v3.3.0 by @renovate[bot] in https://github.com/yteraoka/creel/pull/24
+- Update goreleaser/goreleaser-action action to v7.3.0 by @renovate[bot] in https://github.com/yteraoka/creel/pull/25
+- Update dependency golangci/golangci-lint to v2.15.0 by @renovate[bot] in https://github.com/yteraoka/creel/pull/26
+- Update Songmu/tagpr action to v1.21.3 by @renovate[bot] in https://github.com/yteraoka/creel/pull/27
+- Update Songmu/tagpr action to v1.21.4 by @renovate[bot] in https://github.com/yteraoka/creel/pull/28
+- Update module go.yaml.in/yaml/v4 to v4.0.0-rc.7 by @renovate[bot] in https://github.com/yteraoka/creel/pull/29
+- Update module go.yaml.in/yaml/v4 to v4.0.0-rc.9 by @renovate[bot] in https://github.com/yteraoka/creel/pull/30
+- Update Songmu/tagpr action to v1.22.0 by @renovate[bot] in https://github.com/yteraoka/creel/pull/31
+- Update module go.yaml.in/yaml/v4 to v4.0.0 by @renovate[bot] in https://github.com/yteraoka/creel/pull/32
+
 ## [v0.0.3](https://github.com/yteraoka/creel/compare/v0.0.2...v0.0.3) - 2026-09-05
 
 - rule ごとに min_size を指定できるようにする by @yteraoka in https://github.com/yteraoka/creel/pull/16
